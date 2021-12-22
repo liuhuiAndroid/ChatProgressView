@@ -7,7 +7,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.content.ContextCompat
@@ -47,21 +46,9 @@ class ChatProgressView @JvmOverloads constructor(
         color = defaultProgressColor
     }
 
-//    @FloatRange(from = .0, to = 1.0, toInclusive = false)
-//    var progress: Float = 0f
-//        set(value) {
-//            field = when {
-//                value < 0f -> 0f
-//                value > 1f -> 1f
-//                else -> value
-//            }
-//            sweepAngle = convertToSweepAngle(field)
-//            invalidate()
-//        }
-
     // in degrees [0, 360)
     private var currentAngle: Float by observable(0f) { _, _, _ -> invalidate() }
-    private var sweepAngle: Float by observable(MIN_SWEEP_ANGLE) { _, _, _ -> invalidate() }
+    private var sweepAngle: Float = MIN_SWEEP_ANGLE
 
     private val progressRect: RectF = RectF()
     private var bgRadius: Float = 0f
@@ -119,6 +106,7 @@ class ChatProgressView @JvmOverloads constructor(
                 bgRadius - bgStrokePaint.strokeWidth / 2f,
                 bgPaint
             )
+            sweepAngle
             drawCircle(progressRect.centerX(), progressRect.centerY(), bgRadius, bgStrokePaint)
             // 1. 在这种情况下，弧线只在一个方向上 "增加"
             drawArc(progressRect, currentAngle, sweepAngle, false, progressPaint)
@@ -131,11 +119,18 @@ class ChatProgressView @JvmOverloads constructor(
 
     override fun createAnimation(): Animator =
         ValueAnimator.ofFloat(currentAngle, currentAngle + MAX_ANGLE).apply {
-            interpolator = AccelerateDecelerateInterpolator()
+            interpolator = LinearInterpolator()
             duration = SPIN_DURATION_MS
             repeatCount = ValueAnimator.INFINITE
             addUpdateListener {
                 currentAngle = normalize(it.animatedValue as Float)
+                sweepAngle = convertToSweepAngle(
+                    if ((it.animatedValue as Float) / 360F >= 0.5) {
+                        (it.animatedValue as Float) / 360F
+                    } else {
+                        1 - (it.animatedValue as Float) / 360F
+                    }
+                )
             }
         }
 
