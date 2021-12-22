@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ChatProgressView</string>
+    <string name="telegram_loading_animation_title">Telegram loading animation</string>
+    <string name="telegram_loading_animation_example">Telegram loading animation example</string>
+</resources>

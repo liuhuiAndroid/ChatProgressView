@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="chat_progress_padding">4dp</dimen>
+    <dimen name="chat_progress_bg_stroke_width">2dp</dimen>
+    <dimen name="chat_progress_stroke_width">4dp</dimen>
+    <dimen name="chat_progress_view_size">120dp</dimen>
+</resources>
