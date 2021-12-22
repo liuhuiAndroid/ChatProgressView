@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import androidx.annotation.FloatRange
 import androidx.core.content.ContextCompat
@@ -25,8 +26,9 @@ class ChatProgressView @JvmOverloads constructor(
 
     private val defaultBgColor: Int = ContextCompat.getColor(context, R.color.chat_progress_bg)
     private val defaultBgStrokeColor: Int =
-        ContextCompat.getColor(context, R.color.bright_foreground_dark_disabled)
-    private val defaultProgressColor: Int = ContextCompat.getColor(context, R.color.white)
+        ContextCompat.getColor(context, R.color.chat_progress_bg_stroke)
+    private val defaultProgressColor: Int =
+        ContextCompat.getColor(context, R.color.chat_progress_stroke)
 
     private val progressPadding = context.resources.getDimension(R.dimen.chat_progress_padding)
 
@@ -45,17 +47,17 @@ class ChatProgressView @JvmOverloads constructor(
         color = defaultProgressColor
     }
 
-    @FloatRange(from = .0, to = 1.0, toInclusive = false)
-    var progress: Float = 0f
-        set(value) {
-            field = when {
-                value < 0f -> 0f
-                value > 1f -> 1f
-                else -> value
-            }
-            sweepAngle = convertToSweepAngle(field)
-            invalidate()
-        }
+//    @FloatRange(from = .0, to = 1.0, toInclusive = false)
+//    var progress: Float = 0f
+//        set(value) {
+//            field = when {
+//                value < 0f -> 0f
+//                value > 1f -> 1f
+//                else -> value
+//            }
+//            sweepAngle = convertToSweepAngle(field)
+//            invalidate()
+//        }
 
     // in degrees [0, 360)
     private var currentAngle: Float by observable(0f) { _, _, _ -> invalidate() }
@@ -91,11 +93,11 @@ class ChatProgressView @JvmOverloads constructor(
 
         val verticalHalf = (measuredHeight - paddingTop - paddingBottom) / 2f
         val horizontalHalf = (measuredWidth - paddingStart - paddingEnd) / 2f
-
         val progressOffset = progressPadding + progressPaint.strokeWidth / 2f
 
         // since the stroke it drawn on center of the line, we need to safe space for half of it,
         // or it will be truncated by the bounds
+        // 由于笔画在线的中心，我们需要为它留出一半的安全空间，否则它将被截断的界限
         bgRadius = min(horizontalHalf, verticalHalf) - bgStrokePaint.strokeWidth / 2f
 
         val progressRectMinSize = 2 * (min(horizontalHalf, verticalHalf) - progressOffset)
@@ -129,14 +131,11 @@ class ChatProgressView @JvmOverloads constructor(
 
     override fun createAnimation(): Animator =
         ValueAnimator.ofFloat(currentAngle, currentAngle + MAX_ANGLE).apply {
-            interpolator = LinearInterpolator()
+            interpolator = AccelerateDecelerateInterpolator()
             duration = SPIN_DURATION_MS
             repeatCount = ValueAnimator.INFINITE
             addUpdateListener {
-                val animValue = it.animatedValue
-                if (animValue is Float) {
-                    currentAngle = normalize(animValue)
-                }
+                currentAngle = normalize(it.animatedValue as Float)
             }
         }
 
@@ -144,6 +143,8 @@ class ChatProgressView @JvmOverloads constructor(
      * converts (shifts) the angle to be from 0 to 360.
      * For instance: if angle = 400.54, the normalized version will be 40.54
      * Note: angle = 360 will be normalized to 0
+     *
+     * 将任意角缩小回 [0, 2π) 区间内
      */
     private fun normalize(angle: Float): Float {
         val decimal = angle - angle.toInt()
@@ -154,8 +155,13 @@ class ChatProgressView @JvmOverloads constructor(
         MIN_SWEEP_ANGLE + progress * (MAX_ANGLE - MIN_SWEEP_ANGLE)
 
     private companion object {
-        const val SPIN_DURATION_MS = 2_000L
-        const val MIN_SWEEP_ANGLE = 10f // in degrees
-        const val MAX_ANGLE = 360 // in degrees
+        // 旋转一圈的时间
+        const val SPIN_DURATION_MS = 1_000L
+
+        // 最小扫过角度
+        const val MIN_SWEEP_ANGLE = 36f
+
+        // 最大角度
+        const val MAX_ANGLE = 360
     }
 }

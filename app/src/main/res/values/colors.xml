@@ -8,6 +8,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="bright_foreground_dark_disabled">#80ffffff</color>
-    <color name="chat_progress_bg">#000000</color>
+    <color name="chat_progress_bg">#66000000</color>
+    <color name="chat_progress_bg_stroke">#80ffffff</color>
+    <color name="chat_progress_stroke">#FFFFFFFF</color>
 </resources>
